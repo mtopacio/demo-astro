@@ -1,0 +1,90 @@
+---
+import Default from '../layouts/DefaultLayout.astro'
+---
+
+<Default>
+	<div class="bg-white h-60 shadow-2xl p-2 rounded-md" id="echart-plot"></div>
+	<div class="uppercase italic text-xs flex justify-center pt-6">
+		An example call to an API
+	</div>
+</Default>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js "></script>
+<script>
+	
+	await fetch('https://api.coinstats.app/public/v1/charts?period=1y&coinId=ethereum',{
+		method: "GET", 
+		headers: {
+			"Content-Type": "application/json",
+			"Origin": "rconnect.illumina.com",
+		},
+	}).then((resp) => {
+		return resp.json()
+	}).then((resp) => {
+		
+		// console.log(resp);
+		let data = [['date', 'value']]
+		resp.chart.forEach((el) => {
+			let d = new Date(el[0]*1000);
+			data.push([
+				d.toISOString().replace('T', ' ').replace('Z','').split('.')[0],
+				el[1]
+			]);
+		}) 
+
+		var myChart = echarts.init(document.getElementById('echart-plot'))
+		let option = {
+			title: {
+				text: 'Ethereum Price/Week'
+			},
+			dataset: {
+				source: data
+			},
+			tooltip: {
+				trigger: 'axis'
+			},
+            xAxis: { type: 'category' },
+            yAxis: { type: 'value' },
+            series: [{
+				type: 'line',
+				smooth: true,
+				showSymbol: false,
+				itemStyle: {
+					color: 'rgb(85, 144, 93)'
+				},
+				lineStyle: {
+					width: 1,
+					color: 'rgb(181, 216, 186)'
+				},
+				areaStyle: {
+					opacity: 0.8,
+					color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+						{
+							offset: 0,
+							color: 'rgb(181, 216, 186)'
+						},
+						{
+							offset: 1,
+							color: 'rgb(85, 144, 93)'
+						}
+					])
+				},
+				encode: {
+					x: 'date',
+					y: 'value'
+				}
+			}],
+            grid: {
+                left: 60,
+                top: 40,
+                right: 20,
+                bottom: 30
+            }
+        };
+		myChart.setOption(option);
+        window.addEventListener('resize', function() {
+            myChart.resize();
+        })
+	})
+	
+</script>
